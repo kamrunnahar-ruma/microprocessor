@@ -1,54 +1,45 @@
 .model small
 .stack 100h
 .data
-    prompt db 'Enter characters (end with $): $'
-    inputBuffer db 50 dup('$') ; input buffer, ends with '$'
-    minChar db 0
-    resultMsg db 0Dh, 0Ah, 'Smallest character: $'
-
+    buffer db 20          ; max chars
+           db ?           ; will hold length
+           db 20 dup(0)   ; input chars
+    msg db 10,13,'Enter string (max 20 chars): $'
+    result_msg db 10,13,'First character: $'
 .code
-main:
+main proc
     mov ax, @data
     mov ds, ax
-
-    ; Show prompt
-    lea dx, prompt
-    mov ah, 09h
+    
+    ; prompt
+    lea dx, msg
+    mov ah, 9
     int 21h
-
-    ; Take input string (ends with '$')
-    lea dx, inputBuffer
+    
+    ; read string
+    lea dx, buffer
     mov ah, 0Ah
     int 21h
-
-    ; Initialize registers
-    lea si, inputBuffer + 2 ; skip length byte and reserved byte
-    lodsb                  ; load first character into AL
-    mov bl, al             ; store it as minChar
-
-find_min:
-    lodsb                  ; load next char from input
-    cmp al, '$'            ; check for end of string
-    je show_result
-    cmp al, bl             ; compare with current minChar
-    jae skip               ; if AL >= BL, skip
-    mov bl, al             ; new minChar found
-
-skip:
-    jmp find_min
-
-show_result:
-    ; Print result message
-    lea dx, resultMsg
-    mov ah, 09h
+    
+    ; print result message on new line
+    lea dx, result_msg
+    mov ah, 9
     int 21h
-
-    ; Print smallest character
-    mov dl, bl
-    mov ah, 02h
+    
+    ; print first char
+    mov dl, [buffer+2]
+    mov ah, 2
     int 21h
-
-    ; Exit
+    
+    ; print final newline
+    mov ah, 2
+    mov dl, 10
+    int 21h
+    mov dl, 13
+    int 21h
+    
+    ; exit
     mov ah, 4Ch
     int 21h
+main endp
 end main
